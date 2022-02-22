@@ -10,7 +10,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.voyd.MainActivity;
 import com.example.voyd.Models.UserLoginReq;
@@ -25,18 +26,18 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin, btnReg;
     private TextView tvForgot;
 
-    private MutableLiveData<UserLoginResp> response;
+    private UserLoginResp response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_login );
-        edtEmail = (EditText) findViewById( R.id.edtEmailLogin );
-        edtPass = (EditText) findViewById( R.id.edtPassLogin );
-        tvForgot = (TextView) findViewById( R.id.tvForgot );
-        btnLogin = (Button) findViewById( R.id.btnLogin );
-        btnReg = (Button) findViewById( R.id.btnRegisterLogin );
-
+        edtEmail = findViewById( R.id.edtEmailLogin );
+        edtPass = findViewById( R.id.edtPassLogin );
+        tvForgot = findViewById( R.id.tvForgot );
+        btnLogin = findViewById( R.id.btnLogin );
+        btnReg = findViewById( R.id.btnRegisterLogin );
+        initViewModel();
         btnLogin.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,26 +68,26 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    private void initViewModel() {
+        loginViewModel = new ViewModelProvider( this ).get( LoginViewModel.class );
+        loginViewModel.getMutableLoginCreds().observe( this, new Observer<UserLoginResp>() {
+            @Override
+            public void onChanged(UserLoginResp userResponse) {
+                if (!userResponse.isSuccess()) {
+                    Toast.makeText( LoginActivity.this, "failed to log in", Toast.LENGTH_SHORT ).show();
+                } else {
+                    Toast.makeText( LoginActivity.this, "Successfully Logged in", Toast.LENGTH_SHORT ).show();
+                    startActivity( new Intent( LoginActivity.this, MainActivity.class ) );
+                }
+            }
+        } );
+    }
+
     private void loginRequest(String email, String pass) {
 
-        LoginViewModel loginViewModel = new LoginViewModel();
-        loginViewModel.callToLogin( new UserLoginReq( email, pass ) );
 
-        response = loginViewModel.getMutableLoginCreds();
-        if (response != null) {
-            if (response.getValue().isSuccess()) {
-                Intent it = new Intent( LoginActivity.this, MainActivity.class );
-                startActivity( it );
-            } else {
+        loginViewModel.callToLogin( new UserLoginReq( email, pass ), this );
 
-                Toast.makeText( LoginActivity.this, "" + response.getValue().getErrorResponce().getMessage(), Toast.LENGTH_LONG ).show();
-
-            }
-
-        } else {
-            Toast.makeText( LoginActivity.this, "Failed Login", Toast.LENGTH_LONG ).show();
-
-        }
 
     }
 }

@@ -1,12 +1,12 @@
 package com.example.voyd.Models;
 
-public class ErrorResponce {
-    private String message,code;
+public class FailLogin {
+    private String message, code;
 
-    public ErrorResponce() {
+    public FailLogin() {
     }
 
-    public ErrorResponce(String message, String code) {
+    public FailLogin(String message, String code) {
         this.message = message;
         this.code = code;
     }
@@ -25,5 +25,13 @@ public class ErrorResponce {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    @Override
+    public String toString() {
+        return "ErrorResponce{" +
+                "message='" + message + '\'' +
+                ", code='" + code + '\'' +
+                '}';
     }
 }

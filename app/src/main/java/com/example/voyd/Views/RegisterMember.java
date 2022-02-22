@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.voyd.MainActivity;
 import com.example.voyd.Models.RegistrationReq;
@@ -23,18 +25,20 @@ public class RegisterMember extends AppCompatActivity {
     private Button btnRegister;
     private TextView btnLogin;
     private MutableLiveData<UserLoginResp> response;
+    private RegisterViewModel regViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_register_member );
-        edtEmail = (EditText) findViewById( R.id.edtEmailRegister );
-        edtFname = (EditText) findViewById( R.id.edtFirstNameRegister );
-        edtLname = (EditText) findViewById( R.id.edtLastNameRegister );
-        edtPass = (EditText) findViewById( R.id.edtPassRegister );
-        btnRegister = (Button) findViewById( R.id.btnRegister );
-        btnLogin = (TextView) findViewById( R.id.btnLoginRegister );
+        edtEmail = findViewById( R.id.edtEmailRegister );
+        edtFname = findViewById( R.id.edtFirstNameRegister );
+        edtLname = findViewById( R.id.edtLastNameRegister );
+        edtPass = findViewById( R.id.edtPassRegister );
+        btnRegister = findViewById( R.id.btnRegister );
+        btnLogin = findViewById( R.id.btnLoginRegister );
 
+        initViewModel();
         btnRegister.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -60,27 +64,24 @@ public class RegisterMember extends AppCompatActivity {
         } );
     }
 
+    private void initViewModel() {
+        regViewModel = new ViewModelProvider( this ).get( RegisterViewModel.class );
+        regViewModel.getMutableRegCreds().observe( this, new Observer<UserLoginResp>() {
+            @Override
+            public void onChanged(UserLoginResp userResponse) {
+                if (!userResponse.isSuccess()) {
+                    Toast.makeText( RegisterMember.this, "Registeration Failed ", Toast.LENGTH_SHORT ).show();
+                } else {
+                    Toast.makeText( RegisterMember.this, "Successfully Registered", Toast.LENGTH_SHORT ).show();
+                    startActivity( new Intent( RegisterMember.this, MainActivity.class ) );
+                }
+            }
+        } );
+    }
+
     private void registerMember(RegistrationReq req) {
 
-        RegisterViewModel regViewModel = new RegisterViewModel();
         regViewModel.callToRegister( req );
-
-        response = regViewModel.getMutableRegCreds();
-
-        if (response != null) {
-            if (response.getValue().isSuccess()) {
-                Intent it = new Intent( RegisterMember.this, MainActivity.class );
-                startActivity( it );
-            } else {
-
-                Toast.makeText( RegisterMember.this, "" + response.getValue().getErrorResponce().getMessage(), Toast.LENGTH_LONG ).show();
-
-            }
-
-        } else {
-            Toast.makeText( RegisterMember.this, "Failed Registration", Toast.LENGTH_LONG ).show();
-
-        }
 
     }
 }

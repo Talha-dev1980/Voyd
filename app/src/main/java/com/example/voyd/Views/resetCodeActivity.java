@@ -9,6 +9,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.voyd.MainActivity;
 import com.example.voyd.Models.UserLoginResp;
@@ -20,22 +22,24 @@ public class resetCodeActivity extends AppCompatActivity {
     private Button btnSubmit;
     private String email;
     private MutableLiveData<UserLoginResp> response;
+    private RegisterViewModel regViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_reset_code );
-        edtCode = (EditText) findViewById( R.id.edtCodeVerify );
-        btnSubmit = (Button) findViewById( R.id.btnSubmit );
+        edtCode = findViewById( R.id.edtCodeVerify );
+        btnSubmit = findViewById( R.id.btnSubmit );
 
-        Intent it=getIntent();
-        email=it.getStringExtra( "email" );
+        Intent it = getIntent();
+        email = it.getStringExtra( "email" );
+        initViewModel();
         btnSubmit.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 if (edtCode.getText().length() >= 8) {
-                    resetVerificationCode( email,edtCode.getText().toString().trim() );
+                    resetVerificationCode( email, edtCode.getText().toString().trim() );
 
                 } else {
 
@@ -45,25 +49,22 @@ public class resetCodeActivity extends AppCompatActivity {
 
     }
 
-    private void resetVerificationCode(String email,String code) {
-        RegisterViewModel regViewModel = new RegisterViewModel();
-        regViewModel.resetVerificationCode( email,code );
-
-        response = regViewModel.getMutableRegCreds();
-
-        if (response != null) {
-            if (response.getValue().isSuccess()) {
-                Intent it = new Intent( resetCodeActivity.this, LoginActivity.class );
-                startActivity( it );
-            } else {
-
-                Toast.makeText( resetCodeActivity.this, "" + response.getValue().getErrorResponce().getMessage(), Toast.LENGTH_LONG ).show();
-
+    private void initViewModel() {
+        regViewModel = new ViewModelProvider( this ).get( RegisterViewModel.class );
+        regViewModel.getMutableRegCreds().observe( this, new Observer<UserLoginResp>() {
+            @Override
+            public void onChanged(UserLoginResp userResponse) {
+                if (!userResponse.isSuccess()) {
+                    Toast.makeText( resetCodeActivity.this, "Registeration Failed ", Toast.LENGTH_SHORT ).show();
+                } else {
+                    Toast.makeText( resetCodeActivity.this, "Successfully Registered", Toast.LENGTH_SHORT ).show();
+                    startActivity( new Intent( resetCodeActivity.this, MainActivity.class ) );
+                }
             }
+        } );
+    }
 
-        } else {
-            Toast.makeText( resetCodeActivity.this, "Failed Password change", Toast.LENGTH_LONG ).show();
-
-        }
+    private void resetVerificationCode(String email, String code) {
+        regViewModel.resetVerificationCode( email, code );
     }
 }

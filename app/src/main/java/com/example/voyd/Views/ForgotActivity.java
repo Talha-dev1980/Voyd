@@ -12,8 +12,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.example.voyd.MainActivity;
 import com.example.voyd.Models.UserLoginResp;
 import com.example.voyd.R;
 import com.example.voyd.ViewModels.RegisterViewModel;
@@ -23,81 +24,72 @@ public class ForgotActivity extends AppCompatActivity {
     private EditText edtEmail;
     private String email;
     private Button btnReset;
-
+    private RegisterViewModel regViewModel;
     private MutableLiveData<UserLoginResp> response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_forgot );
-        edtEmail = (EditText) findViewById( R.id.edtEmailForgot );
-        btnReset = (Button) findViewById( R.id.btnReset );
+        edtEmail = findViewById( R.id.edtEmailForgot );
+        btnReset = findViewById( R.id.btnReset );
+        initViewModel();
         btnReset.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                email= edtEmail.getText().toString().trim();
+                email = edtEmail.getText().toString().trim();
                 if (TextUtils.isEmpty( edtEmail.getText().toString().trim() )) {
                     Toast.makeText( ForgotActivity.this, "Please fill in field", Toast.LENGTH_LONG ).show();
-
                 } else {
-                    if (emailVerified( email )) {
+                    emailVerified( email );
+                }
+            }
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ForgotActivity.this);
-                        builder.setPositiveButton("Resend verfication Email", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                               resendEmail(email);
-                            }
-                        });
-                    }
+        } );
+    }
+
+    private void initViewModel() {
+        regViewModel = new ViewModelProvider( this ).get( RegisterViewModel.class );
+        regViewModel.getMutEmailSent().observe( this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean userResponse) {
+                if (!userResponse) {
+                    Toast.makeText( ForgotActivity.this, "Email not verified ", Toast.LENGTH_SHORT ).show();
+                    AlertDialog.Builder builder = new AlertDialog.Builder( ForgotActivity.this );
+                    builder.setMessage( "Email not verified" );
+                    builder.setPositiveButton( "Resend verfication Email", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            resendEmail( email );
+                        }
+                    } );
+                } else {
+                    startActivity( new Intent( ForgotActivity.this, resetCodeActivity.class ) );
+                }
+            }
+        } );
+        regViewModel.getMutableRegCreds().observe( this, new Observer<UserLoginResp>() {
+            @Override
+            public void onChanged(UserLoginResp userResponse) {
+                if (!userResponse.isSuccess()) {
+                    Toast.makeText( ForgotActivity.this, "Failed To send email ", Toast.LENGTH_SHORT ).show();
+                } else {
+                    Toast.makeText( ForgotActivity.this, "" + userResponse.getMessage(), Toast.LENGTH_SHORT ).show();
+
                 }
             }
         } );
     }
 
     private void resendEmail(String email) {
-        RegisterViewModel regViewModel = new RegisterViewModel();
         regViewModel.sendVerificationEmail( email );
 
-        response = regViewModel.getMutableRegCreds();
-        if (response != null) {
-            if (response.getValue().isSuccess()) {
-
-
-
-                Toast.makeText( ForgotActivity.this, "" + response.getValue().getErrorResponce().getMessage(), Toast.LENGTH_LONG ).show();
-
-                Intent it=new Intent(ForgotActivity.this,resetCodeActivity.class);
-                it.putExtra( "email",email );
-                startActivity( it );
-            }
-
-        } else {
-            Toast.makeText( ForgotActivity.this, "Failed To send email", Toast.LENGTH_LONG ).show();
-
-        }
 
     }
 
-    private boolean emailVerified(String email) {
+    private void emailVerified(String email) {
 
-        RegisterViewModel regViewModel = new RegisterViewModel();
+
         regViewModel.isVerified( email );
 
-        response = regViewModel.getMutableRegCreds();
-
-        if (response != null) {
-            if (response.getValue().isSuccess()) {
-                return true;
-            } else {
-
-                Toast.makeText( ForgotActivity.this, "" + response.getValue().getErrorResponce().getMessage(), Toast.LENGTH_LONG ).show();
-
-            }
-
-        } else {
-            Toast.makeText( ForgotActivity.this, "Failed Registration", Toast.LENGTH_LONG ).show();
-
-        }
-        return false;
     }
 }

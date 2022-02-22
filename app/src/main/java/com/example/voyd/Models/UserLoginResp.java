@@ -1,18 +1,22 @@
 package com.example.voyd.Models;
 
 public class UserLoginResp {
-    private boolean success;
-   private Data data;
-   private ErrorResponce errorResponce;
+    private boolean success = false;
+    private Data data;
+    private String message, code;
+
+    private error errorResp;
 
 
     public UserLoginResp() {
     }
 
-    public UserLoginResp(boolean success, Data data, ErrorResponce errorResponce) {
+    public UserLoginResp(boolean success, Data data, String message, String code, error errorResp) {
         this.success = success;
         this.data = data;
-        this.errorResponce = errorResponce;
+        this.message = message;
+        this.code = code;
+        this.errorResp = errorResp;
     }
 
     public boolean isSuccess() {
@@ -31,11 +35,27 @@ public class UserLoginResp {
         this.data = data;
     }
 
-    public ErrorResponce getErrorResponce() {
-        return errorResponce;
+    public String getMessage() {
+        return message;
     }
 
-    public void setErrorResponce(ErrorResponce errorResponce) {
-        this.errorResponce = errorResponce;
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public error getErrorResp() {
+        return errorResp;
+    }
+
+    public void setErrorResp(error errorResp) {
+        this.errorResp = errorResp;
     }
 }
